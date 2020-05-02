@@ -1,0 +1,20 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: helloworld
+  name: helloworld
+spec:
+  template:
+    metadata:
+      labels:
+        app: helloworld
+      name: helloworld
+    spec:
+      containers:
+        - name: helloworld
+          #image: gcr.io/hightowerlabs/helloworld:0.0.1
+          image: paulbouwer/hello-kubernetes:1.5
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
