@@ -1,7 +1,7 @@
 module "vpc" {
   source = "./modules/vpc"
 
-  name = "my-vpc"
+  name = "superawesome"
   cidr = "10.0.0.0/16"
 
   azs             = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
@@ -18,7 +18,7 @@ module "vpc" {
 }
 
 resource "aws_iam_role" "example" {
-  name = "eks-cluster-example"
+  name = "superawesome"
 
   assume_role_policy = <<POLICY
 {
@@ -48,7 +48,7 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSServicePolicy" {
 
 
 resource "aws_eks_cluster" "example" {
-  name     = "example"
+  name = "superawesome"
   role_arn = aws_iam_role.example.arn
 
   vpc_config {
