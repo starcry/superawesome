@@ -4,6 +4,7 @@ metadata:
   labels:
     app: helloworld
   name: helloworld
+  namespace: hello-world
 spec:
   replicas: 3
   template:
