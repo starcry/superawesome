@@ -5,6 +5,7 @@ metadata:
     app: helloworld
   name: helloworld
 spec:
+  replicas: 3
   template:
     metadata:
       labels:
