@@ -1,0 +1,28 @@
+[
+  {
+    "name": "superawesome",
+    "image": "hello-world",
+    "cpu": 10,
+    "memory": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 8080,
+        "hostPort": 80
+      }
+    ]
+  },
+  {
+    "name": "second",
+    "image": "service-second",
+    "cpu": 10,
+    "memory": 256,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 443,
+        "hostPort": 443
+      }
+    ]
+  }
+]
