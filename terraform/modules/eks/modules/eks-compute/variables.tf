@@ -1,69 +1,69 @@
 variable "eks_cluster_name" {
-  type = "string"
+  type = string
 }
 
 variable "eks_cluster_ca_data" {
-  type = "string"
+  type = string
 }
 
 variable "eks_cluster_endpoint" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_max_pods" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_ssh_key_name" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_ami_name" {
-  type    = "string"
+  type = string
   default = "eks-worker-v20"
 }
 
 variable "eks_worker_instance_type" {
-  type    = "string"
+  type = string
   default = "t2.medium"
 }
 
 variable "eks_worker_desired_capacity" {
-  type    = "string"
+  type = string
   default = "1"
 }
 
 variable "eks_worker_min_size" {
-  type    = "string"
+  type = string
   default = "1"
 }
 
 variable "eks_worker_max_size" {
-  type    = "string"
+  type = string
   default = "1"
 }
 
 variable "eks_worker_instance_profile" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_group_name" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_sg_id" {
-  type = "string"
+  type = string
 }
 
 variable "eks_worker_subnet_ids" {
-  type = "list"
+  type = list
 }
 
 variable "eks_worker_public_ip_enable" {
-  type    = "string"
+  type = string
   default = "false"
 }
 
 variable "region" {
-  type = "string"
+  type = string
 }

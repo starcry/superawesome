@@ -1,9 +1,7 @@
 variable "access" {
-  
 }
 
 variable "secret" {
-  
 }
 
 variable "region" {
