@@ -43,3 +43,8 @@ variable "family" {
 variable "azs" {
   type = string
 }
+
+variable "subnet_ids" {
+  type = list
+}
+
