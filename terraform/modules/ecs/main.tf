@@ -119,6 +119,17 @@ resource "aws_autoscaling_group" "ecs" {
   timeouts {
     delete = "15m"
   }
+
+  tag {
+    key                 = "AmazonECSManaged"
+    value = ""
+    propagate_at_launch = true
+  }
+
+
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }
 
 resource "aws_ecs_capacity_provider" "ecs" {

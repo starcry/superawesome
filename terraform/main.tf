@@ -33,10 +33,51 @@ module "ecs" {
 }
 
 
+##########################
+###### CIRCLECI STUFF#####
+##########################
 
-#module "eks_cluster" {
-#  source = "./modules/eks"
-#  cluster_name = "superawesome"
-#  eks_role = "superawesome_cluster"
-#  subnet_ids = [module.vpc.private_subnets[0], module.vpc.private_subnets[1]]
-#}
+resource "aws_ecr_repository" "superawesome" {
+  name = "superawesome"
+}
+
+resource "aws_iam_group" "clientci" {
+  name = "clientci"
+  path = "/"
+}
+
+resource "aws_iam_policy" "clientci_ecs_service_policy" {
+  name = "clientci_ecs_service_role_policy"
+  path        = "/"
+  policy = file("policies/clientci_ecs_policy.json")
+}
+
+resource "aws_iam_policy" "clientci_ecr_service_policy" {
+  name = "clientci_ecr_service_policy"
+  policy = file("policies/clientci_ecr_policy.json")
+  path        = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "clientci_ecr_attach" {
+  group      = aws_iam_group.clientci.name
+  policy_arn = aws_iam_policy.clientci_ecr_service_policy.arn
+}
+
+resource "aws_iam_group_policy_attachment" "clientci_ecs_attach" {
+  group      = aws_iam_group.clientci.name
+  policy_arn = aws_iam_policy.clientci_ecs_service_policy.arn
+}
+
+resource "aws_iam_user" "clientci" {
+  name = "clientci"
+}
+
+resource "aws_iam_user_group_membership" "clientci" {
+  user = aws_iam_user.clientci.name
+
+  groups = [
+    aws_iam_group.clientci.name,
+  ]
+}
+
+##########################
