@@ -52,17 +52,12 @@ resource "aws_lb_target_group" "ecs" {
 
 resource "aws_lb_listener" "ecs" {
   load_balancer_arn = aws_lb.ecs.arn
-  port              = var.to_port
+  port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    type = "redirect"
-
-    redirect {
-      port        = var.to_port
-      protocol    = "HTTP"
-      status_code = "HTTP_301"
-    }
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.ecs.arn}"
   }
 }
 
