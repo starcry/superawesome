@@ -21,15 +21,15 @@ resource "aws_security_group" "allow_web" {
 
 
 resource "aws_iam_role" "ecs_service_role" {
-    name = "${var.name}_ecs_service_role"                                                                                                                                                                                      
+    name = "${var.name}_ecs_service_role"
     assume_role_policy = file("./policies/ecs-role.json")
-}            
-             
+}
+
 resource "aws_iam_role_policy" "ecs_service_role_policy" {
     name = "${var.name}_ecs_service_role_policy"
     policy = file("policies/ecs-service-role-policy.json")
     role = aws_iam_role.ecs_service_role.id
-} 
+}
 
 resource "aws_lb" "ecs" {
   name               = "${var.name}-alb"
@@ -57,7 +57,7 @@ resource "aws_lb_listener" "ecs" {
 
   default_action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.ecs.arn}"
+    target_group_arn = aws_lb_target_group.ecs.arn
   }
 }
 
@@ -83,6 +83,59 @@ resource "aws_lb_listener_rule" "ecs" {
   }
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_launch_configuration" "ecs" {
+  name          = "web_config"
+  image_id      = data.aws_ami.ubuntu.id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "ecs" {
+  name                      = "${var.name}-ecs-placement-group"
+  max_size                  = 3
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 2
+  force_delete              = true
+  launch_configuration      = aws_launch_configuration.ecs.name
+  vpc_zone_identifier       = var.subnet_ids
+
+  timeouts {
+    delete = "15m"
+  }
+}
+
+resource "aws_ecs_capacity_provider" "ecs" {
+  name = "${var.name}-ecs"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.ecs.arn
+
+    managed_scaling {
+      maximum_scaling_step_size = 1000
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+      target_capacity           = 10
+    }
+  }
+}
+
 resource "aws_ecs_cluster" "ecs" {
   name = "${var.name}_ecs_cluster"
 }
@@ -99,7 +152,6 @@ resource "aws_ecs_task_definition" "ecs" {
   placement_constraints {
     type       = "memberOf"
     expression = "attribute:ecs.availability-zone in [${var.azs}]"
-    #expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
   }
 }
 

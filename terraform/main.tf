@@ -29,6 +29,7 @@ module "ecs" {
   listener_url = "www.example.com"
   family = "hello-world"
   azs = "us-west-2a, us-west-2b"
+  subnet_ids = module.vpc.public_subnets
 }
 
 
