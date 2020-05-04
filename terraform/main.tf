@@ -27,7 +27,7 @@ module "ecs" {
   from_port = 80
   to_port = 80
   listener_url = "www.example.com"
-  family = "hello-world"
+  family = "superawesome_ecs"
   azs = "us-west-2a, us-west-2b"
   subnet_ids = module.vpc.public_subnets
 }

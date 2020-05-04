@@ -1,8 +1,64 @@
-version: 2.1
-jobs:
-  build:
-    docker: 
-      - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
-    steps:
-      - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command
+version: 2.1 
+
+orbs:
+  aws-ecr: circleci/aws-ecr@6.8.2 # Use the AWS ECR orb in your config
+  aws-ecs: circleci/aws-ecs@1.1.0 # Use the AWS ECS orb in your config
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - aws-ecr/build-and-push-image:
+          path: ./helloworld/.
+          repo: ${AWS_RESOURCE_NAME_PREFIX}
+          tag: '${CIRCLE_SHA1}' 
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image # only run the deployment job once the build and push image job has completed
+          family: 'superawesome_ecs'
+          cluster-name: 'superawesome_ecs_cluster'
+          container-image-name-updates: 'container=superawesome,tag=${CIRCLE_SHA1}'
+
+
+
+#version: 2.1
+#jobs:
+#  build:
+#    docker: 
+#      - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
+#    steps:
+#      - checkout # check out the code in the project directory
+#      - run: echo "hello world" # run the `echo` command
+#
+#
+#version: 2
+#jobs:
+# build:
+#   machine: true
+#   steps:
+#     - checkout
+#     # start proprietary DB using private Docker image
+#     # with credentials stored in the UI
+#     - run: |
+#         echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+#         docker run -d --name db company/proprietary-db:1.2.3
+#
+#     # build the application image
+#     - run: docker build -t company/app:$CIRCLE_BRANCH .
+#
+#     # deploy the image
+#     - run: docker push company/app:$CIRCLE_BRANCH
+#
+#
+#version: 2.1
+#
+#orbs:
+#  aws-ecr: circleci/aws-ecr@x.y.z
+#  aws-ecs: circleci/aws-ecs@0x.y.z
+#
+#workflows:
+#  build-and-deploy:
+#    jobs:
+#      - aws-ecr/build-and-push-image:
+#          repo: "${AWS_RESOURCE_NAME_PREFIX}"
+#          tag: "${CIRCLE_SHA1}"
+

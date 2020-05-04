@@ -4,6 +4,9 @@
     {
       "Effect": "Allow",
       "Action": [
+        "ecs:UpdateService",
+        "ecs:RegisterTaskDefinition",
+        "ecs:DescribeTaskDefinition",
         "elasticloadbalancing:Describe*",
         "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
         "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
