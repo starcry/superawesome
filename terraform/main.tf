@@ -25,7 +25,7 @@ module "ecs" {
   cidr_blocks   = module.vpc.public_subnets_cidr_blocks
   subnets            = module.vpc.public_subnets
   from_port = 80
-  to_port = 8080
+  to_port = 80
   listener_url = "www.example.com"
   family = "hello-world"
   azs = "us-west-2a, us-west-2b"
