@@ -30,6 +30,7 @@ module "ecs" {
   family = "superawesome_ecs"
   azs = "us-west-2a, us-west-2b"
   subnet_ids = module.vpc.public_subnets
+  app_image = "474741970462.dkr.ecr.eu-west-2.amazonaws.com/superawesome:0a3dbda1f8a1d60a95a154bbad91cc631499f22d"
 }
 
 

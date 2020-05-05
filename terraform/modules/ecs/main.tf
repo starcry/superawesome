@@ -8,7 +8,7 @@ resource "aws_security_group" "allow_web" {
     from_port   = var.from_port
     to_port     = var.to_port
     protocol    = var.protocol
-    cidr_blocks   = var.cidr_blocks
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -17,18 +17,6 @@ resource "aws_security_group" "allow_web" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-
-resource "aws_iam_role" "ecs_service_role" {
-    name = "${var.name}_ecs_service_role"
-    assume_role_policy = file("./policies/ecs-role.json")
-}
-
-resource "aws_iam_role_policy" "ecs_service_role_policy" {
-    name = "${var.name}_ecs_service_role_policy"
-    policy = file("policies/ecs-service-role-policy.json")
-    role = aws_iam_role.ecs_service_role.id
 }
 
 resource "aws_lb" "ecs" {
@@ -48,6 +36,7 @@ resource "aws_lb_target_group" "ecs" {
   protocol = "HTTP"
   vpc_id   = var.vpc_id
   depends_on = [aws_lb.ecs]
+  target_type = "ip"
 }
 
 resource "aws_lb_listener" "ecs" {
@@ -133,7 +122,7 @@ resource "aws_lb_listener_rule" "ecs" {
 #}
 #
 #resource "aws_ecs_capacity_provider" "ecs" {
-#  name = "${var.name}-ecs"
+#  name = "${var.name}-ecs2"
 #
 #  auto_scaling_group_provider {
 #    auto_scaling_group_arn         = aws_autoscaling_group.ecs.arn
@@ -152,19 +141,63 @@ resource "aws_ecs_cluster" "ecs" {
 #  capacity_providers = [aws_ecs_capacity_provider.ecs.name]
 }
 
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
+resource "aws_iam_role" "ecsTaskExecutionRole" {
+  name               = "ecs-execution-role-ecs"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
+  role       = aws_iam_role.ecsTaskExecutionRole.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
 resource "aws_ecs_task_definition" "ecs" {
   family                = var.family
-  container_definitions = file("task-definitions/service.json")
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.fargate_cpu
+  memory                   = var.fargate_memory
+  execution_role_arn = aws_iam_role.ecsTaskExecutionRole.arn
 
-  volume {
-    name      = "service-storage"
-    host_path = "/ecs/service-storage"
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": ${var.fargate_cpu},
+    "image": "${var.app_image}",
+    "memory": ${var.fargate_memory},
+    "name": "${var.name}",
+    "networkMode": "awsvpc",
+    "portMappings": [
+      {
+        "containerPort": ${var.app_port},
+        "hostPort": ${var.app_port}
+      }
+    ]
   }
+]
+DEFINITION
 
-  placement_constraints {
-    type       = "memberOf"
-    expression = "attribute:ecs.availability-zone in [${var.azs}]"
-  }
+#  volume {
+#    name      = "service-storage"
+#    host_path = "/ecs/service-storage"
+#  }
+
+#  placement_constraints {
+#    type       = "memberOf"
+#    expression = "attribute:ecs.availability-zone in [${var.azs}]"
+#  }
 }
 
 resource "aws_ecs_service" "ecs" {
@@ -172,13 +205,20 @@ resource "aws_ecs_service" "ecs" {
   cluster         = aws_ecs_cluster.ecs.id
   task_definition = aws_ecs_task_definition.ecs.arn
   desired_count   = 2
-  iam_role        = aws_iam_role.ecs_service_role.arn
-  depends_on      = [aws_iam_role_policy.ecs_service_role_policy, aws_lb_target_group.ecs, aws_lb_listener_rule.ecs]
+#  iam_role        = aws_iam_role.ecs_service_role.arn
+  depends_on      = [aws_lb_target_group.ecs, aws_lb_listener_rule.ecs]
+  launch_type = "FARGATE"
 
-  ordered_placement_strategy {
-    type  = "binpack"
-    field = "cpu"
+  network_configuration {
+    security_groups = ["${aws_security_group.allow_web.id}"]
+    subnets         = var.subnet_ids
+    assign_public_ip = true
   }
+
+#  ordered_placement_strategy {
+#    type  = "binpack"
+#    field = "cpu"
+#  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.ecs.arn
@@ -186,10 +226,10 @@ resource "aws_ecs_service" "ecs" {
     container_port   = 80
   }
 
-  placement_constraints {
-    type       = "memberOf"
-    expression = "attribute:ecs.availability-zone in [eu-west-2a, eu-west-2b]"
-  }
+#  placement_constraints {
+#    type       = "memberOf"
+#    expression = "attribute:ecs.availability-zone in [eu-west-2a, eu-west-2b]"
+#  }
 }
 
 resource "aws_appautoscaling_target" "ecs_target" {
