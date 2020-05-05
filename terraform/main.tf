@@ -18,19 +18,19 @@ module "vpc" {
 }
 
 module "ecs" {
-  source = "./modules/ecs"
-  name = "superawesome"
+  source         = "./modules/ecs"
+  name           = "superawesome"
   container_name = "superawesome"
-  vpc_id = module.vpc.vpc_id
-  cidr_blocks   = module.vpc.public_subnets_cidr_blocks
-  subnets            = module.vpc.public_subnets
-  from_port = 80
-  to_port = 80
-  listener_url = "www.example.com"
-  family = "superawesome_ecs"
-  azs = "us-west-2a, us-west-2b"
-  subnet_ids = module.vpc.public_subnets
-  app_image = "474741970462.dkr.ecr.eu-west-2.amazonaws.com/superawesome:0a3dbda1f8a1d60a95a154bbad91cc631499f22d"
+  vpc_id         = module.vpc.vpc_id
+  cidr_blocks    = module.vpc.public_subnets_cidr_blocks
+  subnets        = module.vpc.public_subnets
+  from_port      = 80
+  to_port        = 80
+  listener_url   = "www.example.com"
+  family         = "superawesome_ecs"
+  azs            = "us-west-2a, us-west-2b"
+  subnet_ids     = module.vpc.public_subnets
+  app_image      = "474741970462.dkr.ecr.eu-west-2.amazonaws.com/superawesome:0a3dbda1f8a1d60a95a154bbad91cc631499f22d"
 }
 
 
@@ -48,15 +48,15 @@ resource "aws_iam_group" "clientci" {
 }
 
 resource "aws_iam_policy" "clientci_ecs_service_policy" {
-  name = "clientci_ecs_service_role_policy"
-  path        = "/"
+  name   = "clientci_ecs_service_role_policy"
+  path   = "/"
   policy = file("policies/clientci_ecs_policy.json")
 }
 
 resource "aws_iam_policy" "clientci_ecr_service_policy" {
-  name = "clientci_ecr_service_policy"
+  name   = "clientci_ecr_service_policy"
   policy = file("policies/clientci_ecr_policy.json")
-  path        = "/"
+  path   = "/"
 }
 
 resource "aws_iam_group_policy_attachment" "clientci_ecr_attach" {
