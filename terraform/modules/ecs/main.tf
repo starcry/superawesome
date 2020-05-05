@@ -72,73 +72,8 @@ resource "aws_lb_listener_rule" "ecs" {
   }
 }
 
-#data "aws_ami" "ubuntu" {
-#  most_recent = true
-#
-#  filter {
-#    name   = "name"
-#    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
-#  }
-#
-#  filter {
-#    name   = "virtualization-type"
-#    values = ["hvm"]
-#  }
-#
-#  owners = ["099720109477"] # Canonical
-#}
-#
-#resource "aws_launch_configuration" "ecs" {
-#  name          = "web_config"
-#  image_id      = data.aws_ami.ubuntu.id
-#  instance_type = "t2.micro"
-#}
-#
-#resource "aws_autoscaling_group" "ecs" {
-#  name                      = "${var.name}-ecs-placement-group"
-#  max_size                  = 3
-#  min_size                  = 1
-#  health_check_grace_period = 300
-#  health_check_type         = "ELB"
-#  desired_capacity          = 2
-#  force_delete              = true
-#  launch_configuration      = aws_launch_configuration.ecs.name
-#  vpc_zone_identifier       = var.subnet_ids
-#
-#  timeouts {
-#    delete = "15m"
-#  }
-#
-#  tag {
-#    key                 = "AmazonECSManaged"
-#    value = ""
-#    propagate_at_launch = true
-#  }
-#
-#
-#  lifecycle {
-#    ignore_changes = [tags]
-#  }
-#}
-#
-#resource "aws_ecs_capacity_provider" "ecs" {
-#  name = "${var.name}-ecs2"
-#
-#  auto_scaling_group_provider {
-#    auto_scaling_group_arn         = aws_autoscaling_group.ecs.arn
-#
-#    managed_scaling {
-#      maximum_scaling_step_size = 1000
-#      minimum_scaling_step_size = 1
-#      status                    = "ENABLED"
-#      target_capacity           = 10
-#    }
-#  }
-#}
-
 resource "aws_ecs_cluster" "ecs" {
   name = "${var.name}_ecs_cluster"
-#  capacity_providers = [aws_ecs_capacity_provider.ecs.name]
 }
 
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
@@ -188,16 +123,6 @@ resource "aws_ecs_task_definition" "ecs" {
   }
 ]
 DEFINITION
-
-#  volume {
-#    name      = "service-storage"
-#    host_path = "/ecs/service-storage"
-#  }
-
-#  placement_constraints {
-#    type       = "memberOf"
-#    expression = "attribute:ecs.availability-zone in [${var.azs}]"
-#  }
 }
 
 resource "aws_ecs_service" "ecs" {
@@ -205,7 +130,6 @@ resource "aws_ecs_service" "ecs" {
   cluster         = aws_ecs_cluster.ecs.id
   task_definition = aws_ecs_task_definition.ecs.arn
   desired_count   = 2
-#  iam_role        = aws_iam_role.ecs_service_role.arn
   depends_on      = [aws_lb_target_group.ecs, aws_lb_listener_rule.ecs]
   launch_type = "FARGATE"
 
@@ -215,21 +139,11 @@ resource "aws_ecs_service" "ecs" {
     assign_public_ip = true
   }
 
-#  ordered_placement_strategy {
-#    type  = "binpack"
-#    field = "cpu"
-#  }
-
   load_balancer {
     target_group_arn = aws_lb_target_group.ecs.arn
     container_name   = var.container_name
     container_port   = 80
   }
-
-#  placement_constraints {
-#    type       = "memberOf"
-#    expression = "attribute:ecs.availability-zone in [eu-west-2a, eu-west-2b]"
-#  }
 }
 
 resource "aws_appautoscaling_target" "ecs_target" {

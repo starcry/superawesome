@@ -4,6 +4,7 @@
     {
       "Effect": "Allow",
       "Action": [
+        "iam:PassRole",
         "ecr:GetAuthorizationToken",
         "ecr:GetDownloadUrlForLayer",
         "ecr:BatchGetImage",
